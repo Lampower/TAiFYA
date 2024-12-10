@@ -24,8 +24,11 @@ namespace TAiFYA
             StartState,
             ConstantState,
             IdentState,
+            BracketOpenState,
             BracketConstantState,
             BracketIdentState,
+            BracketConstantCloseState,
+            BracketIdentCloseState,
             FinishState,
             ErrorState
         }
@@ -39,7 +42,7 @@ namespace TAiFYA
 
         public override AnalizatorResponse StartProgram()
         {
-            AnalizatorResponse response = new();
+            AnalizatorResponse response = AnalizatorResponse.Instance;
             response.InputField = inputText;
             if (string.IsNullOrEmpty(inputText))
             {
@@ -54,6 +57,7 @@ namespace TAiFYA
             string curWord = string.Empty;
             string wordExpected = string.Empty;
             string error = string.Empty;
+            int errorIndex = 0;
 
             string[] operations = ["+", "-", "*", "/"];
 
@@ -61,9 +65,37 @@ namespace TAiFYA
             {
                 if (i >= inputText.Length)
                 {
-                    if (currentState == State.OperationState)
+                    if (currentState == State.OperandState1)
                     {
-                        
+                        var oper1res = OperandCheck(curWord);
+
+                        if (!oper1res.IsSuccess)
+                        {
+                            error = oper1res.Message;
+                            errorIndex += oper1res.ErrorIndex;
+                            currentState = State.ErrorState;
+                        }
+                        else
+                        {
+                            //response.Identificators.AddRange(oper1res.Identificators);
+                            //response.Constants.AddRange(oper1res.Constants);
+                        }
+                    }
+                    else if (currentState == State.OperandState2)
+                    {
+                        var oper1res = OperandCheck(curWord);
+
+                        if (!oper1res.IsSuccess)
+                        {
+                            error = oper1res.Message;
+                            errorIndex += oper1res.ErrorIndex;
+                            currentState = State.ErrorState;
+                        }
+                        else
+                        {
+                            //response.Identificators.AddRange(oper1res.Identificators);
+                            //response.Constants.AddRange(oper1res.Constants);
+                        }
                     }
                     else
                     {
@@ -81,6 +113,7 @@ namespace TAiFYA
                         if (pointer != ' ')
                         {
                             curWord += pointer;
+                            errorIndex = i;
                             currentState = State.OperandState1;
                         }
                         break;
@@ -94,26 +127,19 @@ namespace TAiFYA
                                 error = oper1res.Message;
                                 i = i + oper1res.ErrorIndex;
                                 currentState = State.ErrorState;
+                                break;
                             }
                             else
                             {
-                                response.Identificators.AddRange(oper1res.Identificators);
-                                response.Constants.AddRange(oper1res.Constants);
+                                //response.Identificators.AddRange(oper1res.Identificators);
+                                //response.Constants.AddRange(oper1res.Constants);
                             }
+                            curWord = string.Empty;
                             currentState = State.OperationState;
-                        }
-                        else if (char.IsLetterOrDigit(pointer))
-                        {
-                            curWord += pointer;
-                        }
-                        else if (pointer == ' ')
-                        {
-
                         }
                         else
                         {
-                            error = $"ожидался символ операции получен: {pointer}";
-                            currentState = State.ErrorState;
+                            curWord += pointer;
                         }
                         break;
                     case State.OperationState:
@@ -121,24 +147,15 @@ namespace TAiFYA
                         {
 
                         }
-                        else if (IsOperation(pointer.ToString()))
-                        {
-                            currentState = State.OperandState2;
-                        }
                         else
                         {
-                           
+                            errorIndex = i;
+                            curWord += pointer;
+                            currentState = State.OperandState2;
                         }
                         break;
                     case State.OperandState2:
-                        if (pointer == ' ')
-                        {
-
-                        }
-                        else
-                        {
-
-                        }
+                        curWord += pointer;
                         break;
                 }
             }
@@ -154,16 +171,14 @@ namespace TAiFYA
 
         private AnalizatorResponse OperandCheck(string word)
         {
-            AnalizatorResponse response = new()
-            {
-                
-            };
+            AnalizatorResponse response = AnalizatorResponse.Instance;
             int i = -1;
             int lastIndex = word.Length;
             string error = string.Empty;
             char pointer;
             string curWord = string.Empty;
             var currentState = OperandState.StartState;
+            bool isSpaceBetweenIdAnBr = false;
 
             while (currentState != OperandState.FinishState && currentState != OperandState.ErrorState)
             {
@@ -172,11 +187,11 @@ namespace TAiFYA
                 {
                     if (currentState == OperandState.ConstantState)
                     {
-                        response.Constants.Add(curWord);
+                        response.Constants.Add($"{curWord} - константа");
                     }
                     else if (currentState == OperandState.IdentState)
                     {
-                        response.Identificators.Add(curWord);
+                        response.Identificators.Add($"{curWord} - идентефикатор");
                     }
                     else
                     {
@@ -189,61 +204,67 @@ namespace TAiFYA
                 
                 pointer = word[i];
 
+                
+
                 switch (currentState)
                 {
                     case OperandState.StartState:
-                        if (char.IsDigit(pointer))
+                        if (pointer == ' ')
                         {
-                            curWord += pointer;
-                            currentState = OperandState.ConstantState;
                         }
-                        else if (char.IsLetter(pointer))
+                        else
+                        {
+                            if (char.IsDigit(pointer))
+                            {
+                                curWord += pointer;
+                                currentState = OperandState.ConstantState;
+                            }
+                            else if (char.IsLetter(pointer))
+                            {
+                                curWord += pointer;
+                                currentState = OperandState.IdentState;
+                            }
+                            else
+                            {
+                                error = "Ожидалась константа или идентификатор";
+                                currentState = OperandState.ErrorState;
+                            }
+                        }
+                        break;
+                    case OperandState.ConstantState:
+                        if (isSpaceBetweenIdAnBr && char.IsDigit(pointer))
+                        {
+                            error = "Предполагалась одна константа";
+                            currentState = OperandState.ErrorState;
+                        }
+                        else if (char.IsDigit(pointer))
                         {
                             curWord += pointer;
-                            currentState = OperandState.IdentState;
+                        }
+                        else if (pointer == ' ')
+                        {
+                            isSpaceBetweenIdAnBr = true;
+                        }
+                        else
+                        {
+                            error = "Предполагалась константа";
+                            currentState = OperandState.ErrorState;
                         }
                         break;
                     case OperandState.IdentState:
                         if (pointer == '(')
                         {
-                            response.Constants.Add($"{curWord} - константа-массив");
+                            response.Identificators.Add($"{curWord} - идентификатор-массив");
                             curWord = string.Empty;
-                            if (i >= lastIndex)
-                            { 
-                                currentState = OperandState.ErrorState;
-                                break;
-                            } 
-                            i++;
-                            pointer = word[i];
-                            if (char.IsDigit(pointer))
-                            {
-                                curWord += pointer;
-                                currentState = OperandState.BracketConstantState;
-                            }
-                            else if (char.IsLetter(pointer))
-                            {
-                                curWord += pointer;
-                                currentState = OperandState.BracketIdentState;
-                            }
-                            else
-                            {
-                                error = "В скобках должно что то быть!";
-                                currentState = OperandState.ErrorState;
-                            }
+                            currentState = OperandState.BracketOpenState;
                         }
-                        else if (pointer == ' ')
+                        else if ( pointer == ' ')
                         {
-                            continue;
+                            isSpaceBetweenIdAnBr = true;
                         }
-                        else
+                        else if (isSpaceBetweenIdAnBr && char.IsLetter(pointer))
                         {
-                            curWord += pointer;
-                        }
-                        break;
-                    case OperandState.ConstantState:
-                        if (!char.IsDigit(pointer))
-                        {
-                            error = "Ожидалась константа";
+                            error = "ожидалась скобка";
                             currentState = OperandState.ErrorState;
                         }
                         else
@@ -251,39 +272,81 @@ namespace TAiFYA
                             curWord += pointer;
                         }
                         break;
-                    case OperandState.BracketIdentState:
-                        if (pointer == ')')
+                    case OperandState.BracketOpenState:
+                        if (pointer == ' ')
                         {
-                            response.Identificators.Add($"{curWord} - идентификатор-массива");
-                            currentState = OperandState.FinishState;
+
                         }
-                        else if (!char.IsLetterOrDigit(pointer))
+                        else if (char.IsDigit(pointer))
                         {
-                            error = "В массиве не константа и не идентификатор";
-                            currentState = OperandState.ErrorState;
+                            curWord += pointer;
+                            isSpaceBetweenIdAnBr = false;
+                            currentState = OperandState.BracketConstantState;
+                        }
+                        else if (char.IsLetter(pointer))
+                        {
+                            curWord += pointer;
+                            isSpaceBetweenIdAnBr = false;
+                            currentState = OperandState.BracketIdentState;
                         }
                         else
                         {
-                            curWord += pointer;
+                            error = "ожидался индекса массива";
                         }
                         break;
                     case OperandState.BracketConstantState:
-                        if (pointer == ')')
+                        if (pointer == ' ')
                         {
-                            response.Identificators.Add($"{curWord} - константа-массива");
+                            isSpaceBetweenIdAnBr = true;
+                        }
+                        else if (pointer == ')')
+                        {
+                            response.Constants.Add($"{curWord} - константа-индекс");
+                            curWord = string.Empty;
                             currentState = OperandState.FinishState;
                         }
-                        else if (!char.IsDigit(pointer))
+                        else if (pointer != ' ' && isSpaceBetweenIdAnBr)
                         {
-                            error = "В массиве не константа и не идентификатор";
+                            error = "лишний символ в массиве";
                             currentState = OperandState.ErrorState;
                         }
-                        else
+                        else if (char.IsDigit(pointer))
                         {
                             curWord += pointer;
                         }
+                        else
+                        {
+                            error = "ожидалась константа как индекс";
+                            currentState = OperandState.ErrorState;
+                        }
                         break;
+                    case OperandState.BracketIdentState:
+                        if (pointer == ' ')
+                        {
+                            isSpaceBetweenIdAnBr = true;
+                        }
+                        else if (pointer == ')')
+                        {
+                            response.Identificators.Add($"{curWord} - идентификатор-индекс");
+                            curWord = string.Empty;
+                            currentState = OperandState.FinishState;
+                        }
+                        else if (pointer != ' ' && isSpaceBetweenIdAnBr)
+                        {
+                            error = "лишний символ в массиве";
 
+                            currentState = OperandState.ErrorState;
+                        }
+                        else if (char.IsLetterOrDigit(pointer))
+                        {
+                            curWord += pointer;
+                        }
+                        else
+                        {
+                            error = "ожидался идентификатор как индекс";
+                            currentState = OperandState.ErrorState;
+                        }
+                        break;
                 }
             }
 

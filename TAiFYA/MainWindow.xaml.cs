@@ -17,9 +17,13 @@ namespace TAiFYA
     public partial class MainWindow : Window
     {
         Analizator analizator = new Analizator();
+
+        AnalizatorResponse? res = null;
         public MainWindow()
         {
+            
             InitializeComponent();
+            AnalizeButton.IsEnabled = false;
         }
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -29,20 +33,49 @@ namespace TAiFYA
 
         private void InputButton_Click(object sender, RoutedEventArgs e)
         {
-            var res = analizator.StartProgram();
+            res = analizator.StartProgram();
             if (res.IsSuccess)
             {
+                AnalizeButton.IsEnabled = true;
                 ErrorLabel.Content = "Ошибок нет";
-                string idents = string.Empty;
-                res.Identificators.ForEach(s => idents += $"{s} \n");
-                string consts = string.Empty;
-                res.Constants.ForEach(s => consts += $"{s} \n");
-                SemanticLabel.Content = idents + "\n" + consts;
+                
             }
             else
             {
-                ErrorLabel.Content = res.Message;
+                AnalizeButton.IsEnabled = false;
+                ErrorLabel.Content = $"Ошибка в: {res.ErrorIndex} \nСообщение: {res.Message}";
+                SemanticLabel.Content = string.Empty;
+                MoveCaretToPosition(InputField, res.ErrorIndex);
+                ShowError(res.ErrorIndex);
             }
+        }
+
+        private void ShowError(int errorIndex)
+        {
+            // Assuming your TextBlock has a fixed font size
+            double charWidth = InputField.ActualWidth / InputField.Text.Length;
+            errorIndicator.Margin = new Thickness(errorIndex * charWidth, InputField.ActualHeight, 0, 0);
+            errorIndicator.Visibility = System.Windows.Visibility.Visible;
+        }
+
+        public void MoveCaretToPosition(TextBox textBox, int position)
+        {
+            if (textBox == null || position < 0 || position > textBox.Text.Length)
+            {
+                return; // Or throw an ArgumentException, depending on your error handling preference.
+            }
+
+            textBox.SelectionStart = position;
+            textBox.Focus();
+        }
+
+        private void AnalizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            string idents = string.Empty;
+            res!.Identificators.ForEach(s => idents += $"{s} \n");
+            string consts = string.Empty;
+            res.Constants.ForEach(s => consts += $"{s} \n");
+            SemanticLabel.Content = idents + "\n" + consts;
         }
     }
 }

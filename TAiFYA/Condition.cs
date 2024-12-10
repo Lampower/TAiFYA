@@ -29,7 +29,7 @@ namespace TAiFYA
 
         public override AnalizatorResponse StartProgram()
         {
-            AnalizatorResponse response = new();
+            AnalizatorResponse response = AnalizatorResponse.Instance;
             response.InputField = inputText;
             if (string.IsNullOrEmpty(inputText))
             {
@@ -44,6 +44,7 @@ namespace TAiFYA
             string curWord = string.Empty;
             string wordExpected = string.Empty;
             string error = string.Empty;
+            int errorIndex = 0;
 
             while (!(currentState == State.FinishState || currentState == State.ErrorState))
             {
@@ -60,13 +61,13 @@ namespace TAiFYA
                         var expRes = expressionAnal.StartProgram();
                         if (expRes.IsSuccess)
                         {
-                            response.Identificators.AddRange(expRes.Identificators);
-                            response.Constants.AddRange(expRes.Constants);
+                            //response.Identificators.AddRange(expRes.Identificators);
+                            //response.Constants.AddRange(expRes.Constants);
                         }
                         else
                         {
                             error = expRes.Message;
-                            i += expRes.ErrorIndex;
+                            errorIndex += expRes.ErrorIndex;
                             response.IsSuccess = false;
                         }
                         break;
@@ -91,6 +92,7 @@ namespace TAiFYA
                         if (pointer != ' ')
                         {
                             curWord += pointer;
+                            errorIndex = i;
                             currentState = State.ExpressionState1;
                         }
                         break;
@@ -103,18 +105,20 @@ namespace TAiFYA
                             var expRes = expressionAnal.StartProgram();
                             if (expRes.IsSuccess)
                             {
-                                response.Identificators.AddRange(expRes.Identificators);
-                                response.Constants.AddRange(expRes.Constants);
+                                //response.Identificators.AddRange(expRes.Identificators);
+                                //response.Constants.AddRange(expRes.Constants);
+                                curWord = string.Empty;
+                                currentState = State.OperationState;
+
                             }
                             else
                             {
-                                error = expRes.Message;
-                                i += expRes.ErrorIndex;
-                                response.IsSuccess = false;
+                                //error = expRes.Message;
+                                //i += expRes.ErrorIndex;
+                                //response.IsSuccess = false;
                                 currentState = State.ErrorState;
+                                break;
                             }
-                            curWord = string.Empty;
-                            currentState = State.OperationState;
                         }
                         else
                         {
@@ -122,6 +126,7 @@ namespace TAiFYA
                         }
                         break;
                     case State.OperationState:
+                        errorIndex = i;
                         currentState = State.ExpressionState2;
                         break;
                     case State.ExpressionState2:

@@ -52,10 +52,11 @@ namespace TAiFYA
 
             int i = -1;
             var currentState = State.StartState;
-            string text = inputText + ' ';
+            string text = inputText;
             string curWord = string.Empty;
             string wordExpected = string.Empty;
             string error = string.Empty;
+            int errorIndex = 0;
 
             while (!(currentState == State.FinishState || currentState == State.ErrorState))
             {
@@ -85,7 +86,7 @@ namespace TAiFYA
                         }
                         else
                         {
-                            error = "Строка пустая";
+                            error = "Ожидалось DO";
                             currentState = State.ErrorState;
                         }
                         break;
@@ -158,6 +159,7 @@ namespace TAiFYA
                             {
                                 wordExpected = string.Empty;
                                 curWord = pointer.ToString();
+                                errorIndex = i;
                                 currentState = State.ConditionState;
                             }
                             else
@@ -168,7 +170,7 @@ namespace TAiFYA
                         }
                         else if (pointer == ')')
                         {
-                            error = "Не закрытая скобка";
+                            error = "не обнаружена закрывающая скобка";
                             currentState = State.ErrorState;
                         }
                         else
@@ -181,6 +183,12 @@ namespace TAiFYA
                         if (pointer == ')')
                         {
                             var closesI = inputText.LastIndexOf(')');
+                            if (closesI == -1)
+                            {
+                                error = "не обнаружена закрывающая скобка";
+                                i = text.Length;
+                                currentState = State.ErrorState;
+                            }
                             if (i != closesI)
                             {
                                 curWord += pointer;
@@ -192,14 +200,14 @@ namespace TAiFYA
                             if (!resCondition.IsSuccess)
                             {
                                 error = resCondition.Message;
-                                i += resCondition.ErrorIndex;
+                                errorIndex += resCondition.ErrorIndex;
                                 currentState = State.ErrorState;
                                 break;
                             }
                             else
                             {
-                                response.Constants.AddRange(resCondition.Constants);
-                                response.Identificators.AddRange(resCondition.Identificators);
+                                //response.Constants.AddRange(resCondition.Constants);
+                                //response.Identificators.AddRange(resCondition.Identificators);
                             }
                             // take cur word into another state machine for conditions
                             currentState = State.BracketCloseState;
