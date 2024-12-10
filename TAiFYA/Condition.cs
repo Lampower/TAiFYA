@@ -113,8 +113,8 @@ namespace TAiFYA
                             }
                             else
                             {
-                                //error = expRes.Message;
-                                //i += expRes.ErrorIndex;
+                                error = expRes.Message;
+                                errorIndex += expRes.ErrorIndex;
                                 //response.IsSuccess = false;
                                 currentState = State.ErrorState;
                                 break;
@@ -143,7 +143,7 @@ namespace TAiFYA
 
             if (currentState == State.ErrorState || error != string.Empty)
             {
-                return SetResponse(true, error, i);
+                return SetResponse(true, error, errorIndex);
             }
 
             return response;

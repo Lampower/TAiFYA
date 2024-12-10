@@ -33,6 +33,8 @@ namespace TAiFYA
 
         private void InputButton_Click(object sender, RoutedEventArgs e)
         {
+            ConstLabel.Content = "";
+            IdentLabel.Content = "";
             res = analizator.StartProgram();
             if (res.IsSuccess)
             {
@@ -44,18 +46,8 @@ namespace TAiFYA
             {
                 AnalizeButton.IsEnabled = false;
                 ErrorLabel.Content = $"Ошибка в: {res.ErrorIndex} \nСообщение: {res.Message}";
-                SemanticLabel.Content = string.Empty;
                 MoveCaretToPosition(InputField, res.ErrorIndex);
-                ShowError(res.ErrorIndex);
             }
-        }
-
-        private void ShowError(int errorIndex)
-        {
-            // Assuming your TextBlock has a fixed font size
-            double charWidth = InputField.ActualWidth / InputField.Text.Length;
-            errorIndicator.Margin = new Thickness(errorIndex * charWidth, InputField.ActualHeight, 0, 0);
-            errorIndicator.Visibility = System.Windows.Visibility.Visible;
         }
 
         public void MoveCaretToPosition(TextBox textBox, int position)
@@ -71,11 +63,18 @@ namespace TAiFYA
 
         private void AnalizeButton_Click(object sender, RoutedEventArgs e)
         {
-            string idents = string.Empty;
-            res!.Identificators.ForEach(s => idents += $"{s} \n");
-            string consts = string.Empty;
-            res.Constants.ForEach(s => consts += $"{s} \n");
-            SemanticLabel.Content = idents + "\n" + consts;
+            string idents = "Идентификаторы: \n";
+            foreach (var ident in res.Identificators)
+            {
+                idents += $"{ident.Key} - {ident.Value} \n";
+            }
+            string consts = "Константы: \n";
+            foreach (var ident in res.Constants)
+            {
+                consts += $"{ident.Key} - {ident.Value} \n";
+            }
+            ConstLabel.Content = consts;
+            IdentLabel.Content = idents;
         }
     }
 }

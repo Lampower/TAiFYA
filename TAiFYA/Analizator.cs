@@ -237,7 +237,7 @@ namespace TAiFYA
 
             if (currentState == State.ErrorState || error != string.Empty)
             {
-                return SetResponse(true, error, i);
+                return SetResponse(true, error, errorIndex);
             }
 
             return response;

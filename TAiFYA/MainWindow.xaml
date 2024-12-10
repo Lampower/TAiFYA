@@ -7,12 +7,14 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <Button x:Name="InputButton" Content="Ввод" HorizontalAlignment="Left" Margin="573,103,0,0" VerticalAlignment="Top" Height="38" Width="123" Click="InputButton_Click"/>
-        <StackPanel>
-            <TextBox x:Name="InputField" HorizontalAlignment="Left" Margin="103,106,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="297" Height="36" Background="Black" Foreground="White" VerticalContentAlignment="Center" TextChanged="TextBox_TextChanged"/>
-            <Label x:Name="errorIndicator" Content="^" Foreground="Red" Visibility="Collapsed" VerticalAlignment="Top" Width="297" Height="36" />
-        </StackPanel>
-        <Label x:Name="ErrorLabel" Content="" HorizontalAlignment="Left" Margin="103,172,0,0" VerticalAlignment="Top" Height="68" Width="296" Background="Black" Foreground="White" RenderTransformOrigin="0.5,0.5">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0*"/>
+            <ColumnDefinition Width="203*"/>
+            <ColumnDefinition Width="597*"/>
+        </Grid.ColumnDefinitions>
+        <Button x:Name="InputButton" Content="Ввод" HorizontalAlignment="Left" Margin="299,51,0,0" VerticalAlignment="Top" Height="38" Width="122" Click="InputButton_Click" Grid.Column="2"/>
+        <TextBox x:Name="InputField" TextWrapping="Wrap" Background="Black" Foreground="White" VerticalContentAlignment="Center" TextChanged="TextBox_TextChanged" Grid.ColumnSpan="3" Margin="23,34,379,330"/>
+        <Label x:Name="ErrorLabel" Content="" HorizontalAlignment="Left" Margin="24,107,0,0" VerticalAlignment="Top" Height="76" Width="397" Background="Black" Foreground="White" RenderTransformOrigin="0.5,0.5" Grid.ColumnSpan="3">
             <Label.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform/>
@@ -22,7 +24,7 @@
                 </TransformGroup>
             </Label.RenderTransform>
         </Label>
-        <Label x:Name="SemanticLabel" Content="" HorizontalAlignment="Left" Margin="103,259,0,0" VerticalAlignment="Top" Height="123" Width="295" Background="Black" Foreground="White" RenderTransformOrigin="0.5,0.5">
+        <Label x:Name="IdentLabel" Content="" HorizontalAlignment="Left" Margin="23,203,0,0" VerticalAlignment="Top" Height="212" Width="195" Background="Black" Foreground="White" RenderTransformOrigin="0.5,0.5" Grid.ColumnSpan="3">
             <Label.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform/>
@@ -32,7 +34,17 @@
                 </TransformGroup>
             </Label.RenderTransform>
         </Label>
-        <Button x:Name="AnalizeButton" Content="Семантика" HorizontalAlignment="Left" Margin="573,169,0,0" VerticalAlignment="Top" Height="38" Width="123" Click="AnalizeButton_Click"/>
+        <Button x:Name="AnalizeButton" Content="Семантика" HorizontalAlignment="Left" Margin="298,162,0,0" VerticalAlignment="Top" Height="38" Width="123" Click="AnalizeButton_Click" Grid.Column="2"/>
+        <Label x:Name="ConstLabel" Content="" HorizontalAlignment="Left" Margin="27,203,0,0" VerticalAlignment="Top" Height="212" Width="195" Background="Black" Foreground="White" RenderTransformOrigin="0.5,0.5" Grid.Column="2">
+            <Label.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform/>
+                    <RotateTransform Angle="-0.26"/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Label.RenderTransform>
+        </Label>
 
     </Grid>
 </Window>

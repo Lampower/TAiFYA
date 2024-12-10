@@ -13,10 +13,10 @@ namespace TAiFYA
 
         public AnalizatorResponse() { instance = this; }
         public Dictionary<string, string> IdentifiersAndConsts = new Dictionary<string, string>();
-        public string Message { get; set; } = "";
+        public string Message { get; set; } = "Ошибка";
         public int ErrorIndex { get; set; } = 0;
-        public List<string> Identificators { get; set; } = new();
-        public List<string> Constants { get; set; } = new();
+        public Dictionary<string, string> Identificators { get; set; } = new();
+        public Dictionary<string, string> Constants { get; set; } = new();
 
         public bool IsSuccess {  get; set; } = true;
         public string InputField { get; set; } = string.Empty;

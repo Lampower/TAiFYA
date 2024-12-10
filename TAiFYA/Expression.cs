@@ -162,7 +162,7 @@ namespace TAiFYA
 
             if (error != string.Empty)
             {
-                return SetResponse(true, error, i);
+                return SetResponse(true, error, errorIndex);
             }
 
 
@@ -180,6 +180,8 @@ namespace TAiFYA
             var currentState = OperandState.StartState;
             bool isSpaceBetweenIdAnBr = false;
 
+            
+
             while (currentState != OperandState.FinishState && currentState != OperandState.ErrorState)
             {
                 i++;
@@ -187,11 +189,31 @@ namespace TAiFYA
                 {
                     if (currentState == OperandState.ConstantState)
                     {
-                        response.Constants.Add($"{curWord} - константа");
+                        int.TryParse(curWord, out var value);
+                        if (value < 0 || value > 32767)
+                        {
+                            error = "Семантическая ошибка, число вне диапазона";
+                            currentState = OperandState.ErrorState;
+                            break;
+                        }
+
+                        response.Constants.Add($"{curWord}", "константа");
                     }
                     else if (currentState == OperandState.IdentState)
                     {
-                        response.Identificators.Add($"{curWord} - идентефикатор");
+                        if (curWord.Length > 8 || curWord == "do" || curWord == "while")
+                        {
+                            error = $"Семантическая ошибка";
+                            currentState = OperandState.ErrorState;
+                            break;
+                        }
+                        if (response.Identificators.ContainsKey(curWord))
+                        {
+                            error = $"Семантическая ошибка \nидентификатор уже был использован как {response.Identificators[curWord]}";
+                            currentState = OperandState.ErrorState;
+                            break;
+                        }
+                        response.Identificators.Add($"{curWord}", "идентефикатор");
                     }
                     else
                     {
@@ -254,7 +276,13 @@ namespace TAiFYA
                     case OperandState.IdentState:
                         if (pointer == '(')
                         {
-                            response.Identificators.Add($"{curWord} - идентификатор-массив");
+                            if (response.Identificators.ContainsKey(curWord))
+                            {
+                                error = $"Семантическая ошибка \nидентификатор уже был использован как {response.Identificators[curWord]}";
+                                currentState = OperandState.ErrorState;
+                                break;
+                            }
+                            response.Identificators.Add($"{curWord}", "идентификатор-массив");
                             curWord = string.Empty;
                             currentState = OperandState.BracketOpenState;
                         }
@@ -301,7 +329,13 @@ namespace TAiFYA
                         }
                         else if (pointer == ')')
                         {
-                            response.Constants.Add($"{curWord} - константа-индекс");
+                            if (response.Constants.ContainsKey(curWord))
+                            {
+                                error = $"Семантическая ошибка \nконстанта уже была использован как {response.Identificators[curWord]}";
+                                currentState = OperandState.ErrorState;
+                                break;
+                            }
+                            response.Constants.Add($"{curWord}", "константа-индекс");
                             curWord = string.Empty;
                             currentState = OperandState.FinishState;
                         }
@@ -327,7 +361,13 @@ namespace TAiFYA
                         }
                         else if (pointer == ')')
                         {
-                            response.Identificators.Add($"{curWord} - идентификатор-индекс");
+                            if (response.Identificators.ContainsKey(curWord))
+                            {
+                                error = $"Семантическая ошибка \nидентификатор уже был использован как {response.Identificators[curWord]}";
+                                currentState = OperandState.ErrorState;
+                                break;
+                            }
+                            response.Identificators.Add($"{curWord}", "идентификатор-индекс");
                             curWord = string.Empty;
                             currentState = OperandState.FinishState;
                         }
